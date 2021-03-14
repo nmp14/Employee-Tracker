@@ -1,6 +1,7 @@
 const mysql = require("mysql");
 require("dotenv").config();
 
+const init = require("./main");
 
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -18,7 +19,5 @@ connection.connect((err) => {
     if (err) throw err;
     console.log(`connected as id ${connection.threadId}`);
 
-    promptQuestions();
-
-    connection.end();
+    init(connection);
 });
