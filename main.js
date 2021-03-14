@@ -17,7 +17,7 @@ const mainFunction = async () => {
     // Get function dependent on user choice
     const selectedFunction = await getFunction(answer);
 
-    setTimeout(() => mainFunction(), 500);
+    mainFunction();
 }
 
 const promptQuestions = () => {
