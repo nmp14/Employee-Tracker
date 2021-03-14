@@ -1,4 +1,6 @@
 const mysql = require("mysql");
+require("dotenv").config();
+
 
 const connection = mysql.createConnection({
     host: 'localhost',
@@ -7,12 +9,16 @@ const connection = mysql.createConnection({
 
     user: 'root',
 
-    password: 'Tigger123!@#',
-    database: 'company_employee_db',
+    // Create a .env file on your root and add a password and database.
+    password: process.env.PASSWORD,
+    database: process.env.DATABASE,
 });
 
 connection.connect((err) => {
     if (err) throw err;
     console.log(`connected as id ${connection.threadId}`);
+
+    promptQuestions();
+
     connection.end();
 });
