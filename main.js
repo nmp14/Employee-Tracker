@@ -15,7 +15,9 @@ const mainFunction = async () => {
     // Get user choice
     const answer = await promptQuestions();
     // Get function dependent on user choice
-    const selectedFunction = await getFunction(answer);
+    const selectedFunction = await userChoices(answer);
+    // After deciding which category to access, get query function
+    const queryFunction = await getFunction(selectedFunction)
 
     mainFunction();
 }
@@ -25,9 +27,60 @@ const promptQuestions = () => {
         {
             name: "options",
             type: "rawlist",
-            choices: ["Get All Employees", "Add Department", "Add Roles", "Add Employee", "Update Employee Role", "View Departments", "View Roles", "Quit"]
+            choices: ["View/Edit Employees", "View/Edit Roles", "View/Edit Departments", "Quit"]
         }
     ]);
+}
+
+const userChoices = async (answer) => {
+    let newAnswer;
+
+    switch (answer.options) {
+        case "View/Edit Employees":
+            newAnswer = await promptEmployeeQuestions();
+            break;
+        case "View/Edit Roles":
+            newAnswer = await promptRoleQuestions();
+            break;
+        case "View/Edit Departments":
+            newAnswer = await promptDeptQuestions();
+            break
+        default:
+            quit();
+            break;
+    }
+    return newAnswer;
+}
+// Prompt user for what do with employees
+const promptEmployeeQuestions = () => {
+    return inquirer.prompt([
+        {
+            name: "options",
+            type: "rawlist",
+            choices: ["Get All Employees", "Add Employee", "Update Employee Role", "Go Back"]
+        }
+    ])
+}
+// Prompt user for what to do with roles
+const promptRoleQuestions = () => {
+    return inquirer.prompt([
+        {
+            name: "options",
+            type: "rawlist",
+            choices: ["View Roles", "Add Roles", "Go Back"]
+        }
+    ])
+}
+
+// Prompt use for what to do with departments
+const promptDeptQuestions = () => {
+    return inquirer.prompt([
+        {
+            name: "options",
+            type: "rawlist",
+            choices: ["View Departments", "Add Department", "Go Back"]
+        }
+    ])
 }
 
 const getFunction = async (answer) => {
@@ -54,7 +107,7 @@ const getFunction = async (answer) => {
             await helperFunctions.viewRoles(connectionVar);
             break;
         default:
-            quit();
+            console.log("\nWent back\n");
             break;
     }
 }
