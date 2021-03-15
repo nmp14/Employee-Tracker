@@ -25,7 +25,7 @@ const promptQuestions = () => {
         {
             name: "options",
             type: "rawlist",
-            choices: ["Get All Employees", "Add Department", "Add Roles", "Add Employee", "Update Employee Role", "View Departments", "View Roles"]
+            choices: ["Get All Employees", "Add Department", "Add Roles", "Add Employee", "Update Employee Role", "View Departments", "View Roles", "Quit"]
         }
     ]);
 }
@@ -53,7 +53,14 @@ const getFunction = async (answer) => {
         case "View Roles":
             await helperFunctions.viewRoles(connectionVar);
             break;
+        default:
+            quit();
+            break;
     }
+}
+
+const quit = () => {
+    process.exit();
 }
 
 module.exports = init;
