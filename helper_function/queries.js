@@ -103,6 +103,7 @@ const viewRoles = (connection) => {
         connection.query(queryString, (err, res) => {
             if (err) reject(err);
             else {
+                console.log("\n");
                 console.table(res);
                 resolve(res);
             }
@@ -119,7 +120,7 @@ const viewDepartments = (connection) => {
         connection.query(queryString, (err, res) => {
             if (err) reject(err);
             else {
-                console.log("Departments: ");
+                console.log("Departments: \n");
                 console.table(res);
                 resolve(res);
             }
