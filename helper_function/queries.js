@@ -76,11 +76,41 @@ const addEmployee = async (connection) => {
         }
     ])
 
-    //let manager;
+    const managers = [];
     if (roleAndManager.manager === "Yes") {
-        const manager = await getManagersForDept(connection, employeeToAdd.department);
-        console.log(manager);
+        const managerAnswer = await getManagersForDept(connection, employeeToAdd.department);
+        for (const manager of managerAnswer) {
+            managers.push(`${manager.id}: ${manager.employee}`);
+        }
     }
+
+    const selectManager = await inquirer.prompt([
+        {
+            name: "manager",
+            type: "list",
+            choices: managers
+        }
+    ]);
+
+    // Query portion
+    return new Promise((resolve, reject) => {
+        const queryString = `
+        INSERT INTO employee (first_name, last_name, role_id, manager_id)
+        VALUES (?, ?, ?, ?);
+        `
+
+        // Deconstruct some objects
+        const { firstName, lastName } = employeeToAdd;
+        const { role } = roleAndManager;
+        const { manager } = selectManager;
+
+        connection.query(queryString, [firstName, lastName, parseInt(role.split(":")[0]), parseInt(manager.split(":")[0])], (err, res) => {
+            if (err) reject(err);
+            else {
+                console.log(`Added ${firstName} ${lastName}`);
+            }
+        });
+    })
 }
 
 const getManagersForDept = (connection, department) => {
