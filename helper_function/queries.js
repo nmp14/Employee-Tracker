@@ -28,6 +28,97 @@ const getAllEmployees = async (connection) => {
     })
 }
 
+const addEmployee = async (connection) => {
+    const depts = [];
+    const roles = [];
+
+    // Get dept choices
+    const departments = await viewDepartments(connection, false);
+    for (const department of departments) {
+        depts.push(`${department.id}: ${department.name}`);
+    }
+
+    const employeeToAdd = await inquirer.prompt([
+        {
+            name: "firstName",
+            message: "Enter first name of employee: "
+        },
+        {
+            name: "lastName",
+            message: "Enter last name of employee: "
+        },
+        {
+            name: "department",
+            type: "list",
+            message: "Which department will they work in?",
+            choices: depts
+        }
+    ]);
+
+    // Get role choices
+    const rolesChoices = await viewRolesByDept(connection, employeeToAdd.department);
+    for (const role of rolesChoices) {
+        roles.push(`${role.id}: ${role.title}`);
+    }
+
+    const roleAndManager = await inquirer.prompt([
+        {
+            name: "role",
+            type: "list",
+            message: "Select their role",
+            choices: roles
+        },
+        {
+            name: "manager",
+            type: "list",
+            message: "Do they have a manager? Select no if they are a manager",
+            choices: ["Yes", "No"]
+        }
+    ])
+
+    //let manager;
+    if (roleAndManager.manager === "Yes") {
+        const manager = await getManagersForDept(connection, employeeToAdd.department);
+        console.log(manager);
+    }
+}
+
+const getManagersForDept = (connection, department) => {
+    return new Promise((resolve, reject) => {
+        const queryString = `
+        SELECT employee.id, CONCAT(employee.first_name, ' ', employee.last_name) employee FROM employee
+        INNER JOIN role ON employee.role_id = role.id
+        AND role.title = "Manager"
+        INNER JOIN department ON role.department_id = department.id
+        AND department.name = ?;
+        `
+
+        connection.query(queryString, department.split(" ")[1], (err, res) => {
+            if (err) reject(err);
+            else {
+                resolve(res);
+            }
+        })
+    })
+}
+
+const viewRolesByDept = (connection, department) => {
+    return new Promise((resolve, reject) => {
+        const queryString = `
+        SELECT role.id, role.title, role.salary FROM role
+        LEFT JOIN department ON role.department_id = department.id
+        WHERE department.name = ?;
+        `
+
+        connection.query(queryString, department.split(" ")[1], (err, res) => {
+            if (err) reject(err);
+            else {
+                resolve(res);
+            }
+        })
+    })
+}
+
 const addDepartment = async (connection) => {
     const deptName = await inquirer.prompt([
         {
@@ -93,25 +184,31 @@ const addRoles = async (connection) => {
     });
 }
 
-const viewRoles = (connection) => {
+const viewRoles = (connection, view = true) => {
+    const viewBool = view
+
     return new Promise((resolve, reject) => {
         const queryString = `
-        SELECT role.title, role.salary, department.name AS Department FROM role
+        SELECT role.id, role.title, role.salary, department.name AS Department FROM role
         LEFT JOIN department ON role.department_id = department.id;
         `
 
         connection.query(queryString, (err, res) => {
             if (err) reject(err);
             else {
-                console.log("\n");
-                console.table(res);
+                if (viewBool) {
+                    console.log("\nRoles: ");
+                    console.table(res);
+                }
                 resolve(res);
             }
         })
     });
 }
 
-const viewDepartments = (connection) => {
+const viewDepartments = (connection, view = true) => {
+    const viewBool = view;
+
     return new Promise((resolve, reject) => {
         const queryString = `
         SELECT * FROM department;
@@ -120,12 +217,14 @@ const viewDepartments = (connection) => {
         connection.query(queryString, (err, res) => {
             if (err) reject(err);
             else {
-                console.log("Departments: \n");
-                console.table(res);
+                if (viewBool) {
+                    console.log("Departments: \n");
+                    console.table(res);
+                }
                 resolve(res);
             }
         })
     });
 }
 
-module.exports = { getAllEmployees, addDepartment, addRoles, viewRoles, viewDepartments };
+module.exports = { getAllEmployees, addDepartment, addRoles, viewRoles, viewDepartments, addEmployee };
