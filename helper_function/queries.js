@@ -273,6 +273,25 @@ const updateEmployee = async (connection) => {
     })
 }
 
+const getEmployeeByManager = async (connection) => {
+    return new Promise(async (resolve, reject) => {
+        const queryString = `
+        SELECT CONCAT(m.first_name, " ", m.last_name) Manager,
+        CONCAT(e.first_name, " ", e.last_name) Employee FROM employee m
+        INNER JOIN employee e ON m.id = e.manager_id
+        ORDER BY Manager;
+        `
+
+        connection.query(queryString, (err, res) => {
+            if (err) reject(err);
+            else {
+                console.table(res);
+                resolve(res);
+            }
+        })
+    })
+}
+
 const getManagersForDept = (connection, department) => {
     return new Promise((resolve, reject) => {
         const queryString = `
@@ -417,4 +436,4 @@ const viewDepartments = (connection, view = true) => {
     });
 }
 
-module.exports = { getAllEmployees, addDepartment, addRoles, viewRoles, viewDepartments, addEmployee, updateEmployee };
+module.exports = { getAllEmployees, addDepartment, addRoles, viewRoles, viewDepartments, addEmployee, updateEmployee, getEmployeeByManager };

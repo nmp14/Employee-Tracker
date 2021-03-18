@@ -57,7 +57,7 @@ const promptEmployeeQuestions = () => {
         {
             name: "options",
             type: "rawlist",
-            choices: ["Get All Employees", "Add Employee", "Update Employee Role", "Go Back"]
+            choices: ["Get All Employees", "Add Employee", "Update Employee Role", "Get Employee By Manager", "Go Back"]
         }
     ])
 }
@@ -87,6 +87,9 @@ const getFunction = async (answer) => {
     switch (answer.options) {
         case "Get All Employees":
             await helperFunctions.getAllEmployees(connectionVar);
+            break;
+        case "Get Employee By Manager":
+            await helperFunctions.getEmployeeByManager(connectionVar);
             break;
         case "Add Department":
             await helperFunctions.addDepartment(connectionVar);
