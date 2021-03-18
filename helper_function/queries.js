@@ -113,6 +113,166 @@ const addEmployee = async (connection) => {
     })
 }
 
+//update employee info
+const updateEmployee = async (connection) => {
+    let employeeName;
+    const depts = []
+    const roles = []
+    let getEmployee;
+
+    const nameOrId = await inquirer.prompt([
+        {
+            name: "choice",
+            type: "rawlist",
+            choices: ["Enter employee name", "Search for employee by dept and role"]
+        }
+    ]);
+    //If they want to enter employee name
+    if (nameOrId.choice === "Enter employee name") {
+        employeeName = await inquirer.prompt([
+            {
+                name: "firstName",
+                message: "Enter employee's first name: "
+            },
+            {
+                name: "lastName",
+                message: "Enter employee's last name: "
+            }
+        ]);
+        //else if they wish to search by dept
+    } else {
+        // Get dept choices
+        const departments = await viewDepartments(connection, false);
+        for (const department of departments) {
+            depts.push(`${department.id}: ${department.name}`);
+        }
+
+        depts.push("View all employees in dept");
+
+        const getDept = await inquirer.prompt([
+            {
+                name: "department",
+                type: "list",
+                message: "Which department do they work in?",
+                choices: depts
+            }
+        ]);
+
+        // Get role choices
+        const rolesChoices = await viewRolesByDept(connection, getDept.department);
+        for (const role of rolesChoices) {
+            roles.push(`${role.id}: ${role.title}`);
+        }
+
+        // Get roles in that dept
+        const roleChoices = await inquirer.prompt([
+            {
+                name: "role",
+                type: "list",
+                message: "Select their role",
+                choices: roles
+            },
+        ]);
+
+        let employeeResults = [];
+
+        const resultPromise = await new Promise(async (resolve, reject) => {
+            const queryString = `
+            SELECT CONCAT(first_name, " ", last_name) employee FROM employee
+            INNER JOIN role ON employee.role_id = role.id
+            INNER JOIN department ON role.department_id = department.id
+            WHERE role.id = ?
+            AND department.id = ?;
+            `
+            // get employees
+
+            const employeeSearch = await connection.query(queryString, [parseInt(roleChoices.role.split(":")[0]), parseInt(getDept.department.split(":")[0])], (err, res) => {
+                if (err) reject(err);
+                resolve(res);
+            });
+        });
+
+        for (const employee of resultPromise) {
+            employeeResults.push(employee.employee);
+        }
+
+        //Select employee to update
+        getEmployee = await inquirer.prompt([
+            {
+                name: "employee",
+                type: "rawlist",
+                choices: employeeResults
+            }
+        ]);
+    }
+
+    const deptAgain = [];
+    // Get dept choices
+    const departments2 = await viewDepartments(connection, false);
+    for (const department of departments2) {
+        deptAgain.push(`${department.id}: ${department.name}`);
+    }
+    // update info
+    const updateInfo = await inquirer.prompt([
+        {
+            name: "firstName",
+            message: "Enter first Name"
+        },
+        {
+            name: "lastName",
+            message: "Enter last name: "
+        },
+        {
+            name: "department",
+            type: "rawlist",
+            choices: deptAgain
+        }
+    ]);
+
+    // Get role choices
+    const rolesAgain = [];
+
+    const rolesChoices2 = await viewRolesByDept(connection, updateInfo.department);
+    for (const role of rolesChoices2) {
+        rolesAgain.push(`${role.id}: ${role.title}`);
+    }
+
+    const updateInfoRole = await inquirer.prompt([
+        {
+            name: "role",
+            type: "rawlist",
+            choices: rolesAgain
+        }
+    ]);
+
+    return new Promise((resolve, reject) => {
+        let firstName;
+        let lastName;
+
+        if (nameOrId.choice === "Enter employee name") {
+            firstName = `${employeeName.firstName}`;
+            lastName = `${employeeName.lastName}`;
+        } else {
+            firstName = `${getEmployee.employee.split(" ")[0]}`;
+            lastName = `${getEmployee.employee.split(" ")[1]}`
+        }
+
+        const queryString = `
+        UPDATE employee SET
+        first_name = ?, last_name = ?, role_id = ?
+        WHERE first_name = ? AND last_name = ?;
+        `
+
+        connection.query(queryString, [updateInfo.firstName, updateInfo.lastName, parseInt(updateInfoRole.role.split(":")[0]), firstName, lastName], (err, res) => {
+            if (err) reject(err);
+            else {
+                console.log("You have successfully updated");
+                resolve(res);
+            }
+        })
+    })
+}
+
 const getManagersForDept = (connection, department) => {
     return new Promise((resolve, reject) => {
         const queryString = `
@@ -257,4 +417,4 @@ const viewDepartments = (connection, view = true) => {
     });
 }
 
-module.exports = { getAllEmployees, addDepartment, addRoles, viewRoles, viewDepartments, addEmployee };
+module.exports = { getAllEmployees, addDepartment, addRoles, viewRoles, viewDepartments, addEmployee, updateEmployee };
