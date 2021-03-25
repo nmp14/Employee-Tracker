@@ -30,3 +30,5 @@ None
 If you have further questions you can contact us at nmp14fsu@gmail.com.
 
 Github: nmp14
+
+![terminal](images/terminal.png)
