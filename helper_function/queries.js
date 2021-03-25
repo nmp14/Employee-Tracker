@@ -1,5 +1,6 @@
 const inquirer = require("inquirer");
 
+// Get all employees
 const getAllEmployees = async (connection) => {
     // Create promise so we can await the function back in main.js
     return new Promise((resolve, reject) => {
@@ -28,6 +29,7 @@ const getAllEmployees = async (connection) => {
     })
 }
 
+// Add employee
 const addEmployee = async (connection) => {
     const depts = [];
     const roles = [];
@@ -291,7 +293,7 @@ const getEmployeeByManager = async (connection) => {
         })
     })
 }
-
+// Get managers
 const getManagersForDept = (connection, department) => {
     return new Promise((resolve, reject) => {
         const queryString = `
@@ -327,7 +329,7 @@ const viewRolesByDept = (connection, department) => {
         })
     })
 }
-
+// Create new department
 const addDepartment = async (connection) => {
     const deptName = await inquirer.prompt([
         {
@@ -349,11 +351,11 @@ const addDepartment = async (connection) => {
 
     return
 }
-
+// Create new roles for departments
 const addRoles = async (connection) => {
     const deptChoices = [];
     const departments = await viewDepartments(connection);
-
+    // Get departments so you can add role to specific ones
     for (const department of departments) {
         deptChoices.push(`${department.id}: ${department.name}`);
     }
@@ -392,7 +394,7 @@ const addRoles = async (connection) => {
         })
     });
 }
-
+// View roles
 const viewRoles = (connection, view = true) => {
     const viewBool = view
 
@@ -414,7 +416,7 @@ const viewRoles = (connection, view = true) => {
         })
     });
 }
-
+// View all departments
 const viewDepartments = (connection, view = true) => {
     const viewBool = view;
 
