@@ -79,20 +79,21 @@ const addEmployee = async (connection) => {
     ])
 
     const managers = [];
+    let selectManager;
     if (roleAndManager.manager === "Yes") {
         const managerAnswer = await getManagersForDept(connection, employeeToAdd.department);
         for (const manager of managerAnswer) {
             managers.push(`${manager.id}: ${manager.employee}`);
         }
-    }
 
-    const selectManager = await inquirer.prompt([
-        {
-            name: "manager",
-            type: "list",
-            choices: managers
-        }
-    ]);
+        selectManager = await inquirer.prompt([
+            {
+                name: "manager",
+                type: "list",
+                choices: managers
+            }
+        ]);
+    }
 
     // Query portion
     return new Promise((resolve, reject) => {
@@ -104,12 +105,17 @@ const addEmployee = async (connection) => {
         // Deconstruct some objects
         const { firstName, lastName } = employeeToAdd;
         const { role } = roleAndManager;
-        const { manager } = selectManager;
 
-        connection.query(queryString, [firstName, lastName, parseInt(role.split(":")[0]), parseInt(manager.split(":")[0])], (err, res) => {
+        let manager = null;
+        if (selectManager) {
+            manager = parseInt(selectManager.manager.split(":")[0]);
+        }
+
+        connection.query(queryString, [firstName, lastName, parseInt(role.split(":")[0]), manager], (err, res) => {
             if (err) reject(err);
             else {
                 console.log(`Added ${firstName} ${lastName}`);
+                resolve(true);
             }
         });
     })
